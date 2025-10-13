@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Disponibilidade VS — 2025 e 2026</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topo">
+    <h1>Disponibilidade VS — <span id="ano"></span></h1>
+    <div class="filtro">
+      <label for="selectAno">Selecione o ano:</label>
+      <select id="selectAno"></select>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- ESQUERDA: calendário (2 colunas, 6 meses cada) -->
+    <section class="calendario-area">
+      <div id="cal-grid" class="cal-grid"></div>
+
+      <!-- NOVA SEÇÃO DE BOTÕES -->
+      <div class="acoes-reserva">
+        <button id="btnReserva">Fazer pré-reserva das datas selecionadas</button>
+        <button id="btnInfo">Informações Importantes</button>
+      </div>
+    </section>
+
+    <!-- DIREITA: Sobre o espaço + galeria -->
+    <aside class="lado-direito">
+      <div class="info-espaco">
+        <h2>Sobre o Espaço VS</h2>
+        <p>
+          Nosso espaço de eventos foi criado para proporcionar momentos inesquecíveis!
+          Contamos com área ampla, piscina, churrasqueira, estacionamento e ambiente climatizado.
+          Ideal para festas, confraternizações, casamentos e eventos empresariais.
+        </p>
+        <p>
+          As reservas devem ser realizadas com antecedência. Clique em uma data livre para pré-reservar pelo WhatsApp.
+        </p>
+      </div>
+
+      <div class="galeria">
+        <h3>Veja algumas fotos do nosso espaço:</h3>
+        <div class="fotos">
+          <img src="img/foto1.jpg" alt="Espaço VS 1">
+          <img src="img/foto2.jpg" alt="Espaço VS 2">
+          <img src="img/foto3.jpg" alt="Espaço VS 3">
+          <img src="img/foto4.jpg" alt="Espaço VS 4">
+          <img src="img/foto5.jpg" alt="Espaço VS 5">
+          <img src="img/foto6.jpg" alt="Espaço VS 6">
+          <img src="img/foto7.jpg" alt="Espaço VS 7">
+        </div>
+      </div>
+    </aside>
+  </main>
+<!-- BOTÕES FLUTUANTES -->
+<div class="botoes-flutuantes">
+  <a href="https://wa.me/559492425617" class="botao-flutuante whatsapp" target="_blank" title="Fale conosco no WhatsApp">
+    <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" alt="WhatsApp">
+  </a>
+
+  <a href="https://www.instagram.com/vsfestaseeventos" class="botao-flutuante instagram" target="_blank" title="Nosso Instagram">
+    <img src="https://cdn-icons-png.flaticon.com/512/733/733558.png" alt="Instagram">
+  </a>
+
+  <a href="https://maps.app.goo.gl/72hmuaos8PVMsfH7A?g_st=aw" class="botao-flutuante maps" target="_blank" title="Ver Localização">
+    <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="Localização">
+  </a>
+</div>
+
+<!-- MODAL DE INFORMAÇÕES -->
+<div id="modalInfo" class="modal">
+  <div class="modal-content">
+    <span class="fechar">&times;</span>
+    <h2>📍 Informações Importantes — VS Festas e Eventos</h2>
+    <div class="modal-texto">
+      <pre>
+⏰ <b>Horário de Utilização (24h)</b>
+• Retirada da chave: a partir das 08h da manhã no dia da reserva
+• Devolução: até 08h da manhã do dia seguinte
+
+━━━━━━━━━━━━━━━━━━
+💰 <b>Valores de Aluguel</b>
+• Segunda para Terça: R$ 1.800,00
+• Terça para Quarta: R$ 1.800,00
+• Quarta para Quinta: R$ 1.800,00
+• Quinta para Sexta: R$ 1.800,00
+• Sexta para Sábado: R$ 1.800,00
+• Sábado para Domingo: R$ 2.500,00
+• Domingo ou Feriado: R$ 1.800,00
+• Pacote Sábado + Domingo: R$ 3.000,00
+
+━━━━━━━━━━━━━━━━━━
+📌 <b>Como Confirmar Sua Reserva</b>
+Para garantir sua data, é necessário o pagamento antecipado de 50%.
+O restante é pago na retirada da chave.
+
+💳 Dados para PIX:
+🔑 Chave: 60.179.773/0001-09
+👤 Nome: VS Serviços e Lazer Ltda
+🏦 Banco: Sicoob
+
+━━━━━━━━━━━━━━━━━━
+🏡 <b>O Espaço Oferece</b>
+
+🍽 <b>Área da Cozinha:</b>
+• 01 bebedouro
+• Fogão industrial (4 bocas)
+• Geladeira com freezer independente
+• Mesa INOX (2m)
+• Freezer 2 portas
+• Balcão com 2 cubas grandes
+
+🔥 <b>Área de Churrasco:</b>
+• Churrasqueira
+• Fogão a lenha com forno embutido
+• Freezer tipo cervejeira
+• Fogão cooktop (5 bocas)
+• 06 banquetas + ventilador
+• Balcão para refeições
+• Chapa de disco
+
+🛏 <b>Área de Quartos:</b>
+• 02 suítes climatizadas com camas de casal
+• Aparadores de 1,5m com espelhos
+• Cortinas 
+
+🎉 <b>Área de Lazer:</b>
+• Salão com ventiladores
+• 20 jogos de mesas completos
+• Mesa de sinuca
+• Mesa de madeira (5,5m) com 4 bancos
+• Mesa redonda de madeira
+• Piscina adulta (11,5m) com cascata e iluminação
+• Piscina infantil (4x2m) com cascata e iluminação
+• 02 duchas
+• 02 banheiros (masc. e fem.) com ventiladores
+• TV 85” com som JBL
+• Suporte para rede
+• Internet Wi-Fi
+• Estacionamento interno e externo
+• Portão e porteiro eletrônicos, campainha e câmera
+• Ambiente monitorado por câmeras
+
+━━━━━━━━━━━━━━━━━━
+🧽 <b>Cuidados com a Limpeza</b>
+• Devolver o local limpo, como foi entregue
+• Lixo deve estar ensacado e na lixeira externa
+• Itens de higiene são por conta do locatário
+✔ Serviço de limpeza opcional: R$ 300,00
+
+━━━━━━━━━━━━━━━━━━
+🚫 <b>Regras de Uso</b>
+• Proibido som automotivo
+• Não estacionar dentro do salão
+• Decorações com cuidado — sem cola, danos ou furos na parede e etc...
+(Compartilhe com o decorador, se houver)
+• Pula-pula só em áreas com bloquetes
+• Proibido alimentos na área da piscina
+• Não abrir cerveja nos balcões de mármore
+• Ao final, desligue luzes, freezers, cervejeiras e cascatas
+• ❗ Não nos responsabilizamos por objetos esquecidos
+
+━━━━━━━━━━━━━━━━━━
+🙏 Contamos com sua colaboração!
+Ajude-nos a manter o VS Festas e Eventos sempre pronto para bem receber você e seus convidados.
+📌 Danos causados serão de responsabilidade do locatário.
+      </pre>
+    </div>
+  </div>
+</div>
+
+
+
+  <script src="script.js"></script>
+</body>
+</html>

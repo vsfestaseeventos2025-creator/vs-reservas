@@ -1,0 +1,465 @@
+/* ===========================
+   style.css completo — VS
+   =========================== */
+
+/* ======= VARIÁVEIS / RESET ======= */
+:root{
+  --preto: #111;
+  --cinza: #1a1a1a;
+  --dourado: #f5c518;
+  --dourado-escuro: #e0b800;
+  --vermelho: #e63946;
+  --verde: #4caf50;
+  --branco: #fff;
+}
+
+* { box-sizing: border-box; }
+html,body { height: 100%; }
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--preto);
+  color: var(--branco);
+  font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ======= TOPO / FILTRO ======= */
+header.topo {
+  width: 100%;
+  padding: 20px 12px;
+  text-align: left; /* desktop default left */
+  background: transparent;
+}
+
+header.topo h1 {
+  margin: 0 0 8px 0;
+  color: var(--dourado);
+  font-size: 1.6rem;
+  line-height: 1.15;
+}
+
+/* filtro (seletor de ano) */
+.filtro {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start; /* desktop left */
+  color: var(--branco);
+}
+
+.filtro label {
+  font-size: 0.95rem;
+  color: var(--branco);
+}
+
+.filtro select {
+  background: var(--preto);
+  color: var(--dourado);
+  border: 1px solid var(--dourado);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+/* ======= LAYOUT PRINCIPAL ======= */
+main.container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 36px;
+  flex-wrap: wrap;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* calendario-area e grid */
+.calendario-area {
+  flex: 1 1 720px;
+  min-width: 320px;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr)); /* 4x3 no desktop */
+  gap: 22px;
+  justify-items: center;
+  align-items: start;
+  width: 100%;
+  margin: 0;
+}
+
+/* cada mês */
+.mes {
+  width: 100%;
+  max-width: 260px;
+  background: var(--cinza);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+  transition: transform .18s ease;
+}
+
+.mes:hover { transform: translateY(-4px); }
+
+.mes h3 {
+  margin: 0;
+  padding: 8px 10px;
+  background: var(--dourado);
+  color: #000;
+  font-weight: 600;
+  text-align: center;
+  text-transform: capitalize;
+  font-size: 1.02rem;
+}
+
+/* tabela do mês */
+.tabela-calendario {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--branco);
+}
+
+.tabela-calendario thead th {
+  padding: 6px 4px;
+  font-weight: 700;
+  color: var(--dourado);
+  font-size: 0.82rem;
+}
+
+.tabela-calendario td {
+  padding: 8px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .12s ease, transform .12s ease;
+}
+
+/* cores de status */
+.tabela-calendario td.livre:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.tabela-calendario td.pre-reserva {
+  background: var(--dourado);
+  color: #000;
+  font-weight: 600;
+}
+
+.tabela-calendario td.reservado {
+  background: var(--vermelho);
+  color: #fff;
+  font-weight: 600;
+}
+
+.tabela-calendario td.selecionado {
+  background: var(--verde) !important;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ======= LADO DIREITO (SOBRE + GALERIA) ======= */
+.lado-direito {
+  flex: 0 0 360px;
+  min-width: 260px;
+  max-width: 420px;
+  align-self: flex-start;
+}
+
+.info-espaco {
+  margin-bottom: 20px;
+}
+
+.info-espaco h2 { color: var(--dourado); margin-bottom: 8px; }
+
+.galeria .fotos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.galeria img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(245,197,24,0.08);
+  transition: transform .16s ease;
+}
+.galeria img:hover { transform: scale(1.03); }
+
+/* ======= BOTÕES DE AÇÃO ======= */
+.acoes-reserva {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.acoes-reserva button,
+#btnReserva,
+.botao-reservar {
+  background: var(--dourado);
+  color: #000;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .12s ease, background .12s ease;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.45);
+}
+
+.acoes-reserva button:hover,
+#btnReserva:hover { transform: translateY(-3px); background: var(--dourado-escuro); }
+
+#btnInfo {
+  background: transparent;
+  color: var(--dourado);
+  border: 1px solid var(--dourado);
+  padding: 8px 14px;
+}
+#btnInfo:hover { background: var(--dourado); color:#000; }
+
+/* ======= UTILITÁRIOS ======= */
+.center { display:flex; justify-content:center; align-items:center; }
+
+/* ===========================
+   RESPONSIVIDADE UNIFICADA
+   =========================== */
+@media (max-width: 1200px) {
+  .cal-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .cal-grid { grid-template-columns: repeat(2, 1fr); }
+  main.container { gap: 20px; padding: 18px; }
+  .lado-direito { align-self: stretch; width: 100%; max-width: 900px; }
+}
+
+/* === BLOCO RESPONSIVO (mobile) ===
+   centraliza título e filtro e deixa calendário empilhado
+*/
+@media (max-width: 600px) {
+  /* header: força centralização no mobile (usa !important para garantir) */
+  header.topo {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 14px 12px !important;
+    gap: 8px !important;
+  }
+  header.topo h1 {
+    margin: 0 !important;
+    text-align: center !important;
+    font-size: 1.45rem !important;
+    line-height: 1.1 !important;
+    color: var(--dourado) !important;
+    width: 100%;
+  }
+
+  /* filtro (select) centralizado */
+  .filtro {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+    margin-bottom: 8px !important;
+  }
+  .filtro label { text-align:center !important; }
+  .filtro select {
+    margin: 0 auto !important;
+    display: inline-block !important;
+    width: auto !important;
+    font-size: 1rem !important;
+    padding: 8px 12px !important;
+  }
+
+  /* container empilha tudo e centraliza */
+  main.container {
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 12px !important;
+    gap: 18px !important;
+  }
+
+  /* calendário fica empilhado (1 coluna) para mobile */
+  .cal-grid {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    gap: 14px !important;
+  }
+
+  /* ajusta tamanho dos blocos mês no mobile */
+  .mes {
+    max-width: 100% !important;
+    margin: 0 auto;
+  }
+
+  /* botões: centraliza + largura confortável */
+  .acoes-reserva {
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 10px !important;
+    margin-top: 12px !important;
+  }
+
+  .acoes-reserva button,
+  #btnReserva,
+  #btnInfo {
+    width: 92% !important;
+    max-width: 420px !important;
+    padding: 12px 16px !important;
+    font-size: 1rem !important;
+  }
+
+  /* galeria: imagens menores */
+  .galeria .fotos {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .galeria img { height: 90px; }
+}
+/* ======== BOTÕES FLUTUANTES ======== */
+.botoes-flutuantes {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 999;
+}
+
+.botao-flutuante {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background-color: #f5c518;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.botao-flutuante img {
+  width: 28px;
+  height: 28px;
+}
+
+.botao-flutuante:hover {
+  transform: scale(1.1);
+}
+
+/* Cores personalizadas */
+.botao-flutuante.whatsapp {
+  background-color: #25D366;
+}
+.botao-flutuante.instagram {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+.botao-flutuante.maps {
+  background-color: #4285F4;
+}
+
+/* Ajuste para mobile */
+@media (max-width: 600px) {
+  .botoes-flutuantes {
+    bottom: 15px;
+    right: 15px;
+    gap: 10px;
+  }
+  .botao-flutuante {
+    width: 50px;
+    height: 50px;
+  }
+  .botao-flutuante img {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* ======== MODAL DE INFORMAÇÕES ======== */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.85);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.modal-content {
+  background-color: #1a1a1a;
+  color: #fff;
+  border: 2px solid #f5c518;
+  border-radius: 10px;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px 25px;
+  position: relative;
+  box-shadow: 0 0 20px rgba(245,197,24,0.3);
+}
+
+.modal-content h2 {
+  color: #f5c518;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.modal-content pre {
+  white-space: pre-wrap;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.modal-content b {
+  color: #f5c518;
+}
+
+.fechar {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  color: #f5c518;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.fechar:hover {
+  color: #fff;
+}
+
+/* Responsivo modal */
+@media (max-width: 600px) {
+  .modal-content {
+    max-width: 95%;
+    padding: 15px;
+    font-size: 0.9rem;
+  }
+}
+
+
+
