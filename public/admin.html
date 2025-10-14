@@ -4,8 +4,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Painel Admin - VS Festas & Eventos</title>
-  <link rel="stylesheet" href="style.css" />
   <style>
+    :root { --dourado: #ffd700; }
+    body { background:#0b0b0b;color:#eee;font-family:Arial, sans-serif;margin:0; }
+    .admin-header { padding:18px 24px; background:#0f0f0f; border-bottom:1px solid #111; }
+    .admin-header h1 { margin:0; color:var(--dourado); font-size:20px; }
+    .admin-main { padding:24px; }
+    .admin-table { width:100%; border-collapse:collapse; background:#111; color:#ddd; border-radius:6px; overflow:hidden; }
+    .admin-table th, .admin-table td { padding:8px 10px; border-bottom:1px solid #181818; text-align:left; font-size:13px; }
+    .admin-table thead th { background:#111; color:var(--dourado); font-weight:bold; position:sticky; top:0; }
+    .admin-footer { padding:14px 24px; text-align:center; color:#999; border-top:1px solid #111; }
+
     /* === CALENDÁRIO ADMIN === */
     .calendario-admin {
       display: grid;
@@ -21,7 +30,7 @@
       padding: 12px;
       color: white;
       text-align: center;
-      box-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.08);
     }
 
     .mes h3 {
@@ -40,11 +49,12 @@
     }
 
     .dia {
-      padding: 4px;
-      border-radius: 4px;
+      padding: 6px;
+      border-radius: 6px;
       background: #222;
       color: #ddd;
-      transition: 0.2s;
+      transition: 0.12s;
+      user-select:none;
     }
 
     .dia.reservado {
@@ -54,9 +64,9 @@
     }
 
     .dia:hover {
-      background: #444;
+      background: #333;
       cursor: pointer;
-      transform: scale(1.1);
+      transform: translateY(-3px);
     }
 
     /* === POPUP === */
@@ -75,64 +85,33 @@
       background: #111;
       border: 1px solid var(--dourado);
       border-radius: 12px;
-      padding: 24px;
+      padding: 18px;
       color: white;
       width: 420px;
-      max-height: 80vh;
+      max-height: 84vh;
       overflow-y: auto;
-      box-shadow: 0 0 20px rgba(255,215,0,0.2);
-      animation: fadeIn 0.25s ease;
+      box-shadow: 0 0 20px rgba(255,215,0,0.12);
+      animation: fadeIn 0.16s ease;
     }
 
-    .popup h3 {
-      color: var(--dourado);
-      margin-bottom: 12px;
-      text-align: center;
+    .popup h3 { color:var(--dourado); margin:0 0 10px 0; text-align:center; }
+    .popup label { display:block; margin-top:8px; font-size:13px; color:#ccc; }
+    .popup input[type="text"], .popup textarea, .popup select {
+      width:100%; padding:8px 10px; margin-top:6px; border-radius:6px; border:1px solid #333; background:#171717; color:#eee; box-sizing:border-box;
     }
+    .popup textarea { resize:vertical; min-height:80px; }
 
-    .popup button {
-      background: var(--dourado);
-      color: #111;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      float: right;
-      font-weight: bold;
-    }
+    .popup .actions { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+    .btn { padding:8px 12px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; }
+    .btn-primary { background:var(--dourado); color:#111; }
+    .btn-danger { background:#c23; color:#fff; }
+    .btn-muted { background:#222; color:#ddd; border:1px solid #333; }
 
-    .popup ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
+    @keyframes fadeIn { from{opacity:0;transform:scale(0.98)} to{opacity:1;transform:scale(1)} }
 
-    .popup li {
-      border-bottom: 1px solid #333;
-      padding: 8px 0;
-      font-size: 14px;
-    }
-
-    /* === SELECT ANO === */
-    .ano-selector {
-      text-align: center;
-      margin-top: 12px;
-    }
-
-    .ano-selector select {
-      background: #111;
-      border: 1px solid var(--dourado);
-      color: var(--dourado);
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
+    .note-empty { text-align:center; color:#999; font-size:13px; padding:8px 0; }
+    .year-select { text-align:center; margin-top:8px; }
+    .year-select select { background:#111; border:1px solid var(--dourado); color:var(--dourado); padding:6px 8px; border-radius:6px; }
   </style>
 </head>
 
@@ -165,14 +144,14 @@
         <!-- Calendário -->
         <div style="flex:1; min-width:600px;">
           <h2 style="text-align:center; color:var(--dourado)">Calendário de Reservas</h2>
-          <div class="ano-selector">
-            <label for="anoSelecionado">Ano:</label>
+          <div class="year-select">
+            <label for="anoSelecionado" style="color:#ddd;margin-right:6px;">Ano:</label>
             <select id="anoSelecionado">
               <option value="2025">2025</option>
               <option value="2026">2026</option>
             </select>
           </div>
-          <div id="calendario" class="calendario-admin"></div>
+          <div id="calendario" class="calendario-admin" aria-live="polite"></div>
         </div>
       </div>
     </section>
@@ -182,87 +161,277 @@
     <p>© <span id="ano"></span> VS Festas e Eventos</p>
   </footer>
 
-  <script src="admin.js"></script>
   <script>
+    // Atualiza ano do footer
     document.getElementById("ano").textContent = new Date().getFullYear();
 
     const calendarioEl = document.getElementById("calendario");
     const seletorAno = document.getElementById("anoSelecionado");
+    const tabelaBody = document.querySelector("#tabelaReservas tbody");
     const mesesNomes = [
-      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+      "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+      "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
     ];
+
+    // reserva: { _id? / id?, data: "DD/MM/YYYY", cliente, status, notas }
     let reservasGlobais = [];
 
-    // === POPUP ===
+    // Util: converte "DD/MM/YYYY" para ISO simples (YYYY-MM-DD) para ordenação se precisar
+    function dataParaISO(str) {
+      const parts = str.split("/");
+      if (parts.length !== 3) return str;
+      return `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`;
+    }
+
+    // Mostra popup com campos e ações (add / edit / delete)
     function mostrarPopup(dataSelecionada) {
+      // procura reserva existente (pega a primeira)
       const reservasDoDia = reservasGlobais.filter(r => r.data === dataSelecionada);
+      const reservaExistente = reservasDoDia[0] || null;
 
       const overlay = document.createElement("div");
       overlay.className = "popup-overlay";
       overlay.innerHTML = `
-        <div class="popup">
-          <button onclick="this.closest('.popup-overlay').remove()">Fechar ✖</button>
-          <h3>Reservas em ${dataSelecionada}</h3>
-          ${
-            reservasDoDia.length
-              ? `<ul>${reservasDoDia.map(r =>
-                `<li><b>${r.cliente}</b> - ${r.status}<br><i>${r.notas || ""}</i></li>`
-              ).join("")}</ul>`
-              : `<p style="text-align:center;color:#aaa;">Nenhuma reserva para esta data.</p>`
-          }
+        <div class="popup" role="dialog" aria-modal="true" aria-label="Gerenciar reserva">
+          <h3>Gerenciar Reserva (${dataSelecionada})</h3>
+
+          <label for="popupCliente">Cliente:</label>
+          <input id="popupCliente" type="text" value="${reservaExistente ? escapeHtml(reservaExistente.cliente || "") : ""}">
+
+          <label for="popupStatus">Status:</label>
+          <select id="popupStatus">
+            <option value="Confirmado">Confirmado</option>
+            <option value="Pré-reserva">Pré-reserva</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+
+          <label for="popupNotas">Notas:</label>
+          <textarea id="popupNotas">${reservaExistente ? escapeHtml(reservaExistente.notas || "") : ""}</textarea>
+
+          <div class="actions">
+            <button class="btn btn-muted" id="btnCancelar">Cancelar</button>
+            ${reservaExistente ? `<button class="btn btn-danger" id="btnExcluir">🗑 Excluir</button>` : ""}
+            <button class="btn btn-primary" id="btnSalvar">💾 Salvar</button>
+          </div>
         </div>
       `;
+
       document.body.appendChild(overlay);
+
+      // Aplica status selecionado se existir reserva
+      if (reservaExistente) {
+        const sel = overlay.querySelector("#popupStatus");
+        sel.value = reservaExistente.status || "Pré-reserva";
+      }
+
+      // Fechar ao clicar em cancelar ou fora da popup
+      overlay.querySelector("#btnCancelar").addEventListener("click", () => overlay.remove());
+      overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+
+      // Botão salvar
+      overlay.querySelector("#btnSalvar").addEventListener("click", async () => {
+        const cliente = overlay.querySelector("#popupCliente").value.trim();
+        const status = overlay.querySelector("#popupStatus").value;
+        const notas = overlay.querySelector("#popupNotas").value.trim();
+
+        if (!cliente) {
+          alert("Por favor, informe o nome do cliente.");
+          return;
+        }
+
+        // Prepara objeto
+        const payload = { data: dataSelecionada, cliente, status, notas };
+
+        try {
+          // Se existir id (_id ou id) usa PUT em /api/reservas/:id
+          if (reservaExistente && (reservaExistente._id || reservaExistente.id)) {
+            const id = reservaExistente._id || reservaExistente.id;
+            const res = await fetch(`/api/reservas/${encodeURIComponent(id)}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error("Erro ao atualizar reserva (PUT).");
+          } else if (reservaExistente) {
+            // existe reserva para a data, mas sem id — tenta PUT genérico e se falhar faz POST
+            let res = await fetch(`/api/reservas`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            if (!res.ok) { // fallback para POST
+              res = await fetch(`/api/reservas`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+              });
+              if (!res.ok) throw new Error("Erro ao atualizar/crear reserva.");
+            }
+          } else {
+            // nova reserva -> POST
+            const res = await fetch(`/api/reservas`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error("Erro ao criar reserva (POST).");
+          }
+
+          // sucesso: fecha e recarrega
+          overlay.remove();
+          await carregarReservas();
+        } catch (err) {
+          console.error(err);
+          alert("Ocorreu um erro ao salvar. Veja o console para detalhes.");
+        }
+      });
+
+      // Botão excluir
+      const btnExcluir = overlay.querySelector("#btnExcluir");
+      if (btnExcluir) {
+        btnExcluir.addEventListener("click", async () => {
+          if (!confirm("Tem certeza que deseja excluir esta reserva?")) return;
+          try {
+            if (reservaExistente._id || reservaExistente.id) {
+              const id = reservaExistente._id || reservaExistente.id;
+              const res = await fetch(`/api/reservas/${encodeURIComponent(id)}`, { method: "DELETE" });
+              if (!res.ok) throw new Error("Erro ao excluir por id.");
+            } else {
+              // tenta rota DELETE por data
+              const res = await fetch(`/api/reservas/${encodeURIComponent(dataSelecionada)}`, { method: "DELETE" });
+              if (!res.ok) throw new Error("Erro ao excluir por data.");
+            }
+            overlay.remove();
+            await carregarReservas();
+          } catch (err) {
+            console.error(err);
+            alert("Erro ao excluir. Veja o console para detalhes.");
+          }
+        });
+      }
     }
 
-    // === GERA CALENDÁRIO ===
+    // Função para gerar calendário visual
     function gerarCalendario(ano) {
-      calendarioEl.innerHTML = ""; // limpa antes de trocar o ano
-
+      calendarioEl.innerHTML = "";
       for (let mes = 0; mes < 12; mes++) {
         const mesEl = document.createElement("div");
         mesEl.className = "mes";
         mesEl.innerHTML = `<h3>${mesesNomes[mes]} ${ano}</h3>`;
-
         const diasEl = document.createElement("div");
         diasEl.className = "dias";
 
         const diasNoMes = new Date(ano, mes + 1, 0).getDate();
         for (let dia = 1; dia <= diasNoMes; dia++) {
-          const dataFormatada = `${String(dia).padStart(2, "0")}/${String(mes + 1).padStart(2, "0")}/${ano}`;
+          const dataFormatada = `${String(dia).padStart(2,"0")}/${String(mes+1).padStart(2,"0")}/${ano}`;
           const diaEl = document.createElement("div");
           diaEl.className = "dia";
           diaEl.textContent = dia;
 
-          // Marca os dias reservados
-          if (reservasGlobais.some(r => r.data === dataFormatada)) {
-            diaEl.classList.add("reservado");
-          }
+          const reservaDia = reservasGlobais.find(r => r.data === dataFormatada);
+if (reservaDia) {
+  if (reservaDia.status === "Confirmado") {
+    diaEl.style.background = "#c23";
+    diaEl.style.color = "white";
+  } else if (reservaDia.status === "Pré-reserva") {
+    diaEl.style.background = "var(--dourado)";
+    diaEl.style.color = "black";
+  } else if (reservaDia.status === "Cancelado") {
+    diaEl.style.background = "#444";
+    diaEl.style.color = "#999";
+  }
+}
 
-          diaEl.onclick = () => mostrarPopup(dataFormatada);
+          diaEl.addEventListener("click", () => mostrarPopup(dataFormatada));
           diasEl.appendChild(diaEl);
         }
-
         mesEl.appendChild(diasEl);
         calendarioEl.appendChild(mesEl);
       }
+
+      // Atualiza tabela também
+      renderTabelaReservas();
     }
 
-    // === CARREGA RESERVAS ===
+    // Renderiza lista/tabela de reservas à esquerda
+    function renderTabelaReservas() {
+      tabelaBody.innerHTML = "";
+      // Ordena por data (ISO)
+      const copia = reservasGlobais.slice().sort((a,b) => {
+        const A = dataParaISO(a.data || "");
+        const B = dataParaISO(b.data || "");
+        return A < B ? -1 : (A > B ? 1 : 0);
+      });
+      for (const r of copia) {
+        const tr = document.createElement("tr");
+        const notasPreview = r.notas ? (r.notas.length > 40 ? r.notas.slice(0,40) + "…" : r.notas) : "";
+        tr.innerHTML = `
+          <td>${escapeHtml(r.data || "")}</td>
+          <td>${escapeHtml(r.cliente || "")}</td>
+          <td>${escapeHtml(r.status || "")}</td>
+          <td>${escapeHtml(notasPreview)}</td>
+          <td>
+            <button class="btn btn-muted btn-sm ver" data-data="${encodeURIComponent(r.data)}">Abrir</button>
+          </td>
+        `;
+        tabelaBody.appendChild(tr);
+      }
+
+      // adiciona evento para botões "Abrir"
+      document.querySelectorAll("#tabelaReservas .ver").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const data = decodeURIComponent(btn.getAttribute("data-data"));
+          mostrarPopup(data);
+        });
+      });
+    }
+
+    // Carrega reservas do backend; se falhar, usa dados de teste (evita tela branca)
     async function carregarReservas() {
       try {
-        const resposta = await fetch("/api/reservas");
-        reservasGlobais = await resposta.json();
-
-        gerarCalendario(parseInt(seletorAno.value));
-      } catch (erro) {
-        console.error("Erro ao carregar reservas:", erro);
+        const res = await fetch("/api/reservas");
+        if (!res.ok) throw new Error("Resposta não OK");
+        const dados = await res.json();
+        if (!Array.isArray(dados)) throw new Error("Formato inesperado: espera array");
+        reservasGlobais = dados.map(normalizaReserva);
+      } catch (err) {
+        console.warn("Não foi possível carregar /api/reservas — usando dados de exemplo. Erro:", err);
+        // Exemplo de fallback (você verá isso se backend estiver inacessível)
+        reservasGlobais = [
+          { data: "22/11/2025", cliente: "ANIVERSARIO 15 ANOS", status: "Confirmado", notas: "ANIVERSARIO 15 ANOS", _id: "exemplo-1" },
+          { data: "11/12/2025", cliente: "Cliente Teste", status: "Pré-reserva", notas: "" , _id: "exemplo-2"}
+        ];
       }
+      gerarCalendario(parseInt(seletorAno.value,10));
     }
 
-    seletorAno.addEventListener("change", () => gerarCalendario(parseInt(seletorAno.value)));
+    // Normaliza cada reserva garantindo campos mínimos
+    function normalizaReserva(r) {
+      return {
+        _id: r._id || r.id || null,
+        id: r.id || r._id || null,
+        data: r.data || r.date || "",
+        cliente: r.cliente || r.nome || "",
+        status: r.status || "Pré-reserva",
+        notas: r.notas || r.note || r.description || ""
+      };
+    }
 
+    // Escapa texto simples para injeção segura no innerHTML quando necessário
+    function escapeHtml(text) {
+      if (!text && text !== 0) return "";
+      return String(text)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    // Eventos
+    seletorAno.addEventListener("change", () => gerarCalendario(parseInt(seletorAno.value,10)));
+
+    // Inicializa
     carregarReservas();
   </script>
 </body>
