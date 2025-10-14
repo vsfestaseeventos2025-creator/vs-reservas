@@ -5,7 +5,137 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Painel Admin - VS Festas & Eventos</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* === CALENDÁRIO ADMIN === */
+    .calendario-admin {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .mes {
+      background: #1a1a1a;
+      border: 1px solid var(--dourado);
+      border-radius: 12px;
+      padding: 12px;
+      color: white;
+      text-align: center;
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+    }
+
+    .mes h3 {
+      color: var(--dourado);
+      margin-bottom: 10px;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .dias {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      font-size: 11px;
+    }
+
+    .dia {
+      padding: 4px;
+      border-radius: 4px;
+      background: #222;
+      color: #ddd;
+      transition: 0.2s;
+    }
+
+    .dia.reservado {
+      background: var(--dourado);
+      color: black;
+      font-weight: bold;
+    }
+
+    .dia:hover {
+      background: #444;
+      cursor: pointer;
+      transform: scale(1.1);
+    }
+
+    /* === POPUP === */
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(3px);
+    }
+
+    .popup {
+      background: #111;
+      border: 1px solid var(--dourado);
+      border-radius: 12px;
+      padding: 24px;
+      color: white;
+      width: 420px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 0 20px rgba(255,215,0,0.2);
+      animation: fadeIn 0.25s ease;
+    }
+
+    .popup h3 {
+      color: var(--dourado);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .popup button {
+      background: var(--dourado);
+      color: #111;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      float: right;
+      font-weight: bold;
+    }
+
+    .popup ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .popup li {
+      border-bottom: 1px solid #333;
+      padding: 8px 0;
+      font-size: 14px;
+    }
+
+    /* === SELECT ANO === */
+    .ano-selector {
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    .ano-selector select {
+      background: #111;
+      border: 1px solid var(--dourado);
+      color: var(--dourado);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
 </head>
+
 <body class="admin-body">
   <header class="admin-header">
     <h1>🎉 Painel Administrativo - VS Festas & Eventos</h1>
@@ -15,19 +145,35 @@
     <section>
       <h2 style="text-align:center; color:var(--dourado)">Gerenciar Reservas</h2>
 
-      <div style="overflow:auto;">
-        <table id="tabelaReservas" class="admin-table" style="min-width:720px; margin-top:12px;">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Cliente</th>
-              <th>Status</th>
-              <th>Notas</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div style="display:flex; gap:40px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;">
+        <!-- Tabela -->
+        <div style="flex:1; min-width:700px; overflow:auto;">
+          <table id="tabelaReservas" class="admin-table" style="min-width:720px; margin-top:12px;">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Status</th>
+                <th>Notas</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- Calendário -->
+        <div style="flex:1; min-width:600px;">
+          <h2 style="text-align:center; color:var(--dourado)">Calendário de Reservas</h2>
+          <div class="ano-selector">
+            <label for="anoSelecionado">Ano:</label>
+            <select id="anoSelecionado">
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+            </select>
+          </div>
+          <div id="calendario" class="calendario-admin"></div>
+        </div>
       </div>
     </section>
   </main>
@@ -37,6 +183,87 @@
   </footer>
 
   <script src="admin.js"></script>
-  <script>document.getElementById("ano").textContent = new Date().getFullYear();</script>
+  <script>
+    document.getElementById("ano").textContent = new Date().getFullYear();
+
+    const calendarioEl = document.getElementById("calendario");
+    const seletorAno = document.getElementById("anoSelecionado");
+    const mesesNomes = [
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+    let reservasGlobais = [];
+
+    // === POPUP ===
+    function mostrarPopup(dataSelecionada) {
+      const reservasDoDia = reservasGlobais.filter(r => r.data === dataSelecionada);
+
+      const overlay = document.createElement("div");
+      overlay.className = "popup-overlay";
+      overlay.innerHTML = `
+        <div class="popup">
+          <button onclick="this.closest('.popup-overlay').remove()">Fechar ✖</button>
+          <h3>Reservas em ${dataSelecionada}</h3>
+          ${
+            reservasDoDia.length
+              ? `<ul>${reservasDoDia.map(r =>
+                `<li><b>${r.cliente}</b> - ${r.status}<br><i>${r.notas || ""}</i></li>`
+              ).join("")}</ul>`
+              : `<p style="text-align:center;color:#aaa;">Nenhuma reserva para esta data.</p>`
+          }
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    // === GERA CALENDÁRIO ===
+    function gerarCalendario(ano) {
+      calendarioEl.innerHTML = ""; // limpa antes de trocar o ano
+
+      for (let mes = 0; mes < 12; mes++) {
+        const mesEl = document.createElement("div");
+        mesEl.className = "mes";
+        mesEl.innerHTML = `<h3>${mesesNomes[mes]} ${ano}</h3>`;
+
+        const diasEl = document.createElement("div");
+        diasEl.className = "dias";
+
+        const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+        for (let dia = 1; dia <= diasNoMes; dia++) {
+          const dataFormatada = `${String(dia).padStart(2, "0")}/${String(mes + 1).padStart(2, "0")}/${ano}`;
+          const diaEl = document.createElement("div");
+          diaEl.className = "dia";
+          diaEl.textContent = dia;
+
+          // Marca os dias reservados
+          if (reservasGlobais.some(r => r.data === dataFormatada)) {
+            diaEl.classList.add("reservado");
+          }
+
+          diaEl.onclick = () => mostrarPopup(dataFormatada);
+          diasEl.appendChild(diaEl);
+        }
+
+        mesEl.appendChild(diasEl);
+        calendarioEl.appendChild(mesEl);
+      }
+    }
+
+    // === CARREGA RESERVAS ===
+    async function carregarReservas() {
+      try {
+        const resposta = await fetch("/api/reservas");
+        reservasGlobais = await resposta.json();
+
+        gerarCalendario(parseInt(seletorAno.value));
+      } catch (erro) {
+        console.error("Erro ao carregar reservas:", erro);
+      }
+    }
+
+    seletorAno.addEventListener("change", () => gerarCalendario(parseInt(seletorAno.value)));
+
+    carregarReservas();
+  </script>
 </body>
 </html>
