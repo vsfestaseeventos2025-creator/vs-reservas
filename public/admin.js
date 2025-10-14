@@ -51,6 +51,13 @@ function adicionarEventos() {
       const data = e.target.dataset.data;
       const linha = e.target.closest("tr");
 
+        const nomesMeses = [
+     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+        ];
+        ...
+        tituloMes.textContent = nomesMeses[i];
+
       const cliente = linha.querySelector('input[data-field="cliente"]').value.trim();
       const notas = linha.querySelector('input[data-field="notas"]').value.trim();
       const status = linha.querySelector('select[data-field="status"]').value;
