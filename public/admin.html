@@ -170,118 +170,188 @@
   </div>
 
   <script>
-    const API_URL = "/api/reservas";
-    const calendarioEl = document.getElementById("calendario");
-    const tabelaEl = document.querySelector("#tabelaReservas tbody");
-    const popup = document.getElementById("popupReserva");
-    const dataSelecionadaEl = document.getElementById("dataSelecionada");
-    const clienteInput = document.getElementById("cliente");
-    const statusSelect = document.getElementById("status");
-    const notasInput = document.getElementById("notas");
-    const anoSelecionadoEl = document.getElementById("anoSelecionado");
+document.getElementById("ano").textContent = new Date().getFullYear();
 
-    let reservas = [];
-    let dataSelecionada = "";
+const calendarioEl = document.getElementById("calendario");
+const seletorAno = document.getElementById("anoSelecionado");
+const tabelaBody = document.querySelector("#tabelaReservas tbody");
+const mesesNomes = [
+  "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
+];
 
-    document.getElementById("ano").textContent = new Date().getFullYear();
+let reservasGlobais = [];
 
-    async function carregarReservas() {
-      const res = await fetch(API_URL);
-      reservas = await res.json();
-      gerarCalendario();
-      atualizarTabela();
-    }
+function dataParaISO(str) {
+  const parts = str.split("/");
+  return `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`;
+}
 
-    function gerarCalendario() {
-      const ano = parseInt(anoSelecionadoEl.value);
-      calendarioEl.innerHTML = "";
+function escapeHtml(text) {
+  return String(text || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'", "&#039;");
+}
 
-      for (let mes = 0; mes < 12; mes++) {
-        const divMes = document.createElement("div");
-        divMes.className = "mes";
-        const nomeMes = new Date(ano, mes).toLocaleString("pt-BR", { month: "long" });
-        divMes.innerHTML = `<h3>${nomeMes.toUpperCase()}</h3>`;
+// === POPUP ADMIN ===
+function mostrarPopup(dataSelecionada) {
+  const reservaExistente = reservasGlobais.find(r => r.data === dataSelecionada);
+  const overlay = document.createElement("div");
+  overlay.className = "popup-overlay";
+  overlay.innerHTML = `
+    <div class="popup">
+      <h3>Gerenciar Reserva (${dataSelecionada})</h3>
+      <label>Cliente:</label>
+      <input id="popupCliente" type="text" value="${reservaExistente ? escapeHtml(reservaExistente.cliente) : ""}">
+      <label>Status:</label>
+      <select id="popupStatus">
+        <option value="Confirmado">Confirmado</option>
+        <option value="Pré-reserva">Pré-reserva</option>
+        <option value="Cancelado">Cancelado</option>
+      </select>
+      <label>Notas:</label>
+      <textarea id="popupNotas">${reservaExistente ? escapeHtml(reservaExistente.notas) : ""}</textarea>
+      <div class="actions">
+        <button class="btn btn-muted" id="btnCancelar">Cancelar</button>
+        ${reservaExistente ? `<button class="btn btn-danger" id="btnExcluir">Excluir</button>` : ""}
+        <button class="btn btn-primary" id="btnSalvar">Salvar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const sel = overlay.querySelector("#popupStatus");
+  if (reservaExistente) sel.value = reservaExistente.status;
 
-        const diasDiv = document.createElement("div");
-        diasDiv.className = "dias";
+  overlay.querySelector("#btnCancelar").onclick = () => overlay.remove();
 
-        const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+  overlay.querySelector("#btnSalvar").onclick = async () => {
+    const cliente = overlay.querySelector("#popupCliente").value.trim();
+    const status = overlay.querySelector("#popupStatus").value;
+    const notas = overlay.querySelector("#popupNotas").value.trim();
 
-        for (let dia = 1; dia <= diasNoMes; dia++) {
-          const dataStr = `${String(dia).padStart(2, "0")}/${String(mes + 1).padStart(2, "0")}/${ano}`;
-          const reserva = reservas.find(r => r.data === dataStr);
-          const diaEl = document.createElement("div");
-          diaEl.className = "dia";
+    if (!cliente) return alert("Informe o nome do cliente.");
 
-          if (reserva) {
-            if (reserva.status === "reservado") diaEl.classList.add("reservado");
-            else if (reserva.status === "pre-reserva") diaEl.classList.add("pre-reserva");
-            else if (reserva.status === "cancelado") diaEl.classList.add("cancelado");
-          }
-
-          diaEl.textContent = dia;
-          diaEl.addEventListener("click", () => abrirPopup(dataStr, reserva));
-          diasDiv.appendChild(diaEl);
-        }
-
-        divMes.appendChild(diasDiv);
-        calendarioEl.appendChild(divMes);
-      }
-    }
-
-    function atualizarTabela() {
-      tabelaEl.innerHTML = reservas.map(r => `
-        <tr>
-          <td>${r.data}</td>
-          <td>${r.cliente || "-"}</td>
-          <td>${r.status}</td>
-          <td>${r.notas || ""}</td>
-        </tr>
-      `).join("");
-    }
-
-    function abrirPopup(data, reserva) {
-      dataSelecionada = data;
-      dataSelecionadaEl.textContent = data;
-      clienteInput.value = reserva?.cliente || "";
-      statusSelect.value = reserva?.status || "disponivel";
-      notasInput.value = reserva?.notas || "";
-      popup.style.display = "block";
-    }
-
-    document.getElementById("fecharPopup").addEventListener("click", () => {
-      popup.style.display = "none";
-    });
-
-    document.getElementById("salvarReserva").addEventListener("click", async () => {
-      const dados = {
-        data: dataSelecionada,
-        cliente: clienteInput.value,
-        status: statusSelect.value,
-        notas: notasInput.value
-      };
-
-      const existe = reservas.find(r => r.data === dataSelecionada);
+    const payload = { data: dataSelecionada, cliente, status, notas };
+    try {
+      const existe = reservasGlobais.find(r => r.data === dataSelecionada);
+      let res;
       if (existe) {
-        await fetch(`${API_URL}/${dataSelecionada}`, {
+        res = await fetch(`/api/reservas/${encodeURIComponent(dataSelecionada)}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dados)
+          body: JSON.stringify(payload)
         });
       } else {
-        await fetch(API_URL, {
+        res = await fetch("/api/reservas", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dados)
+          body: JSON.stringify(payload)
         });
       }
 
-      popup.style.display = "none";
-      carregarReservas();
-    });
+      if (!res.ok) throw new Error("Erro ao salvar reserva.");
+      overlay.remove();
+      await carregarReservas();
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao salvar reserva.");
+    }
+  };
 
-    anoSelecionadoEl.addEventListener("change", gerarCalendario);
-    carregarReservas();
-  </script>
-</body>
-</html>
+  const btnExcluir = overlay.querySelector("#btnExcluir");
+  if (btnExcluir) {
+    btnExcluir.onclick = async () => {
+      if (!confirm("Tem certeza que deseja excluir?")) return;
+      try {
+        const res = await fetch(`/api/reservas/${encodeURIComponent(dataSelecionada)}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Erro ao excluir.");
+        overlay.remove();
+        await carregarReservas();
+      } catch (err) {
+        alert("Erro ao excluir reserva.");
+      }
+    };
+  }
+}
+
+// === CALENDÁRIO ===
+function gerarCalendario(ano) {
+  calendarioEl.innerHTML = "";
+  for (let mes = 0; mes < 12; mes++) {
+    const mesEl = document.createElement("div");
+    mesEl.className = "mes";
+    mesEl.innerHTML = `<h3>${mesesNomes[mes]} ${ano}</h3>`;
+    const diasEl = document.createElement("div");
+    diasEl.className = "dias";
+
+    const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+      const dataFormatada = `${String(dia).padStart(2,"0")}/${String(mes+1).padStart(2,"0")}/${ano}`;
+      const diaEl = document.createElement("div");
+      diaEl.className = "dia";
+      diaEl.textContent = dia;
+
+      const reserva = reservasGlobais.find(r => r.data === dataFormatada);
+      if (reserva) {
+        const status = reserva.status.toLowerCase();
+        if (status.includes("confirm")) {
+          diaEl.style.background = "#c23"; // vermelho
+          diaEl.style.color = "white";
+        } else if (status.includes("pré") || status.includes("pre")) {
+          diaEl.style.background = "var(--dourado)"; // amarelo
+          diaEl.style.color = "black";
+        } else {
+          diaEl.style.background = "#333";
+          diaEl.style.color = "#999";
+        }
+      }
+
+      diaEl.onclick = () => mostrarPopup(dataFormatada);
+      diasEl.appendChild(diaEl);
+    }
+
+    mesEl.appendChild(diasEl);
+    calendarioEl.appendChild(mesEl);
+  }
+
+  renderTabelaReservas();
+}
+
+// === TABELA ===
+function renderTabelaReservas() {
+  tabelaBody.innerHTML = "";
+  const ordenadas = reservasGlobais.sort((a,b) => dataParaISO(a.data).localeCompare(dataParaISO(b.data)));
+  for (const r of ordenadas) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.data}</td>
+      <td>${r.cliente}</td>
+      <td>${r.status}</td>
+      <td>${r.notas || ""}</td>
+      <td><button class="btn btn-muted ver" data-data="${r.data}">Abrir</button></td>
+    `;
+    tabelaBody.appendChild(tr);
+  }
+  document.querySelectorAll(".ver").forEach(b => {
+    b.onclick = () => mostrarPopup(b.getAttribute("data-data"));
+  });
+}
+
+// === CARREGAMENTO ===
+async function carregarReservas() {
+  try {
+    const res = await fetch("/api/reservas");
+    reservasGlobais = await res.json();
+  } catch {
+    reservasGlobais = [];
+  }
+  gerarCalendario(parseInt(seletorAno.value,10));
+}
+
+seletorAno.onchange = () => gerarCalendario(parseInt(seletorAno.value,10));
+carregarReservas();
+</script>
+
