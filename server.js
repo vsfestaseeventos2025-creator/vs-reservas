@@ -14,97 +14,75 @@ mongoose.connect('mongodb+srv://vsadmin:Vs%40123456@cluster0.fucm0jm.mongodb.net
   .then(() => console.log('✅ Conectado ao MongoDB Atlas!'))
   .catch((err) => console.error('❌ Erro ao conectar ao MongoDB:', err));
 
+
+
+
 // 🔹 Definição do modelo
 const reservaSchema = new mongoose.Schema({
   data: { type: String, required: true, unique: true },
-  status: { type: String, default: "pre-reserva" }, // "confirmado" ou "pre-reserva"
+  status: { type: String, default: "pre-reserva" },
   cliente: { type: String, default: "" },
   notas: { type: String, default: "" },
 }, { timestamps: true });
 
 const Reserva = mongoose.model("Reserva", reservaSchema);
 
-// ==========================
-// 🔹 Rotas da API
-// ==========================
-
-// Listar todas as reservas
+// 🔹 Rotas
 app.get("/api/reservas", async (req, res) => {
-  try {
-    const reservas = await Reserva.find().sort({ data: 1 });
-    res.json(reservas);
-  } catch (err) {
-    console.error("Erro ao buscar reservas:", err);
-    res.status(500).json({ error: "Erro ao buscar reservas" });
-  }
+  const reservas = await Reserva.find().sort({ data: 1 });
+  res.json(reservas);
 });
 
-// Criar nova reserva (pré-reserva)
 app.post("/api/reservas", async (req, res) => {
   try {
     const { data, status, cliente, notas } = req.body;
     if (!data) return res.status(400).json({ error: "Data é obrigatória" });
 
-    const existente = await Reserva.findOne({ data });
-    if (existente) {
-      return res.json({ ok: true, reserva: existente }); // já existe, não cria novamente
-    }
+    const existe = await Reserva.findOne({ data });
+    if (existe) return res.status(400).json({ error: "Data já reservada" });
 
     const nova = await Reserva.create({ data, status, cliente, notas });
     res.json({ ok: true, reserva: nova });
   } catch (err) {
-    console.error("Erro ao criar reserva:", err);
-    res.status(500).json({ error: "Erro ao criar reserva" });
+    console.error(err);
+    res.status(500).json({ error: "Erro ao salvar reserva" });
   }
 });
 
-// Atualizar status (confirmar / pré-reservar)
 app.put("/api/reservas/:data", async (req, res) => {
   try {
     const dataParam = req.params.data;
-    const { status, cliente, notas } = req.body;
+    const { status, notas, cliente } = req.body;
 
-    let reserva = await Reserva.findOne({ data: dataParam });
-    if (!reserva) {
-      reserva = new Reserva({ data: dataParam, status: status || "pre-reserva", cliente, notas });
-    } else {
-      if (status) reserva.status = status;
-      if (cliente) reserva.cliente = cliente;
-      if (notas) reserva.notas = notas;
-    }
+    const reserva = await Reserva.findOne({ data: dataParam });
+    if (!reserva) return res.status(404).json({ error: "Reserva não encontrada" });
+
+    if (status !== undefined) reserva.status = status;
+    if (notas !== undefined) reserva.notas = notas;
+    if (cliente !== undefined) reserva.cliente = cliente;
 
     await reserva.save();
     res.json({ ok: true, reserva });
   } catch (err) {
-    console.error("Erro ao atualizar reserva:", err);
     res.status(500).json({ error: "Erro ao atualizar reserva" });
   }
 });
 
-// Deletar reserva
 app.delete("/api/reservas/:data", async (req, res) => {
   try {
-    await Reserva.deleteOne({ data: req.params.data });
+    const dataParam = req.params.data;
+    await Reserva.deleteOne({ data: dataParam });
     res.json({ ok: true });
   } catch (err) {
-    console.error("Erro ao deletar reserva:", err);
     res.status(500).json({ error: "Erro ao deletar reserva" });
   }
 });
 
-// ==========================
-// 🔹 Rotas de Páginas
-// ==========================
+// rota do painel admin
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// ==========================
-// 🔹 Servidor
-// ==========================
+// 🔹 Porta compatível com Render
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));

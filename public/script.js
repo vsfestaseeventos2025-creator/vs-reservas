@@ -61,14 +61,7 @@ async function gerarCalendario(ano) {
       td.classList.add("dia");
 
       const dataStr = `${String(d).padStart(2,"0")}/${String(i+1).padStart(2,"0")}/${ano}`;
-
-      // 🔹 Corrige formato das datas vindas do banco (YYYY-MM-DD → DD/MM/YYYY)
-      const reserva = reservas.find(r => {
-        if (!r.data) return false;
-        const [yyyy, mm, dd] = r.data.includes("-") ? r.data.split("-") : r.data.split("/");
-        const dataFormatada = `${dd.padStart(2, "0")}/${mm.padStart(2, "0")}/${yyyy}`;
-        return dataFormatada === dataStr;
-      });
+      const reserva = reservas.find(r => r.data === dataStr);
 
       if (reserva) {
         if (reserva.status === "confirmado") td.classList.add("reservado");
@@ -148,23 +141,30 @@ if (botaoFixo) {
   botaoFixo.addEventListener("click", confirmarVariasReservas);
 }
 
+
+
 // ===== Modal de Informações =====
 const modal = document.getElementById("modalInfo");
 const btnInfo = document.getElementById("btnInfo");
 const spanFechar = document.querySelector(".fechar");
 
-if (btnInfo && modal && spanFechar) {
-  btnInfo.addEventListener("click", () => {
-    modal.style.display = "flex";
-  });
+btnInfo.addEventListener("click", () => {
+  modal.style.display = "flex";
+});
 
-  spanFechar.addEventListener("click", () => {
+spanFechar.addEventListener("click", () => {
+  modal.style.display = "none";
+});
+
+window.addEventListener("click", (event) => {
+  if (event.target === modal) {
     modal.style.display = "none";
-  });
+  }
+});
 
-  window.addEventListener("click", (event) => {
-    if (event.target === modal) {
-      modal.style.display = "none";
-    }
-  });
-}
+
+
+
+
+
+
