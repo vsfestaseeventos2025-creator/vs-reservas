@@ -5,34 +5,69 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Disponibilidade VS — 2025 e 2026</title>
   <link rel="stylesheet" href="style.css" />
-
   <style>
-    /* ===== Botão flutuante ===== */
-    #btnInfoFlutuante {
+    /* ===== BOTÕES FLUTUANTES ===== */
+    .botoes-flutuantes {
       position: fixed;
-      bottom: 90px;
+      bottom: 20px;
       right: 20px;
-      background-color: #ffcc00;
-      color: #000;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 25px;
-      font-weight: bold;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 12px;
+      z-index: 999;
+    }
+
+    .botao-flutuante {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      background-color: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, background-color 0.2s;
       cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-      z-index: 1000;
-      transition: background 0.3s ease;
+      border: none;
     }
 
-    #btnInfoFlutuante:hover {
-      background-color: #ffd633;
+    .botao-flutuante:hover {
+      transform: scale(1.1);
     }
 
-    /* ===== Modal da imagem ===== */
-    .modal-foto {
+    .botao-flutuante img {
+      width: 28px;
+      height: 28px;
+    }
+
+    .botao-flutuante.ajuda {
+      background-color: #007bff;
+      color: white;
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    .botao-flutuante.ajuda:hover {
+      background-color: #0056b3;
+    }
+
+    @media (max-width: 600px) {
+      .botoes-flutuantes {
+        bottom: 15px;
+        right: 15px;
+        gap: 10px;
+      }
+      .botao-flutuante {
+        width: 50px;
+        height: 50px;
+      }
+    }
+
+    /* ===== MODAL DE IMAGEM ===== */
+    .modal-imagem {
       display: none;
       position: fixed;
-      z-index: 2000;
+      z-index: 998;
       padding-top: 60px;
       left: 0;
       top: 0;
@@ -42,32 +77,30 @@
       background-color: rgba(0,0,0,0.9);
     }
 
-    .modal-foto img {
+    .modal-imagem-conteudo {
       margin: auto;
       display: block;
       max-width: 90%;
-      max-height: 85vh;
-      border-radius: 10px;
-      box-shadow: 0 4px 20px rgba(255,255,255,0.2);
+      max-height: 90%;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
     }
 
-    .fechar-foto {
+    .fechar-imagem {
       position: absolute;
       top: 20px;
       right: 35px;
-      color: #fff;
+      color: white;
       font-size: 40px;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.3s;
     }
 
-    .fechar-foto:hover {
-      color: #ffcc00;
+    .fechar-imagem:hover {
+      color: #bbb;
     }
   </style>
 </head>
-
 <body>
   <header class="topo">
     <h1>Disponibilidade VS — <span id="ano"></span></h1>
@@ -115,11 +148,11 @@
     </aside>
   </main>
 
-  <!-- Botão flutuante de informações -->
-  <button id="btnInfoFlutuante">Informações Importantes</button>
-
-  <!-- Botões flutuantes -->
+  <!-- BOTÕES FLUTUANTES -->
   <div class="botoes-flutuantes">
+    <!-- NOVO BOTÃO (?) -->
+    <button id="botaoAjuda" class="botao-flutuante ajuda" title="Informações Importantes">?</button>
+
     <a href="https://wa.me/559492425617" class="botao-flutuante whatsapp" target="_blank" title="Fale conosco no WhatsApp">
       <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" alt="WhatsApp">
     </a>
@@ -133,45 +166,82 @@
     </a>
   </div>
 
-  <!-- Modal de informações -->
+  <!-- MODAL DE INFORMAÇÕES -->
   <div id="modalInfo" class="modal">
     <div class="modal-content">
       <span class="fechar">&times;</span>
       <h2>📍 Informações Importantes — VS Festas e Eventos</h2>
       <div class="modal-texto">
-        <!-- (mantém todo o conteúdo existente aqui) -->
+        <pre>
+⏰ <b>Horário de Utilização (24h)</b>
+• Retirada da chave: a partir das 08h da manhã no dia da reserva
+• Devolução: até 08h da manhã do dia seguinte
+
+━━━━━━━━━━━━━━━━━━
+💰 <b>Valores de Aluguel</b>
+• Segunda para Terça: R$ 1.800,00
+• Terça para Quarta: R$ 1.800,00
+• Quarta para Quinta: R$ 1.800,00
+• Quinta para Sexta: R$ 1.800,00
+• Sexta para Sábado: R$ 1.800,00
+• Sábado para Domingo: R$ 2.500,00
+• Domingo ou Feriado: R$ 1.800,00
+• Pacote Sábado + Domingo: R$ 3.000,00
+
+━━━━━━━━━━━━━━━━━━
+📌 <b>Como Confirmar Sua Reserva</b>
+Para garantir sua data, é necessário o pagamento antecipado de 50%.
+O restante é pago na retirada da chave.
+
+💳 Dados para PIX:
+🔑 Chave: 60.179.773/0001-09
+👤 Nome: VS Serviços e Lazer Ltda
+🏦 Banco: Sicoob
+
+━━━━━━━━━━━━━━━━━━
+🏡 <b>O Espaço Oferece</b>
+🍽 Cozinha, 🔥 Churrasco, 🛏 Quartos, 🎉 Lazer e muito mais!
+        </pre>
       </div>
     </div>
   </div>
 
-  <!-- Modal para ampliar fotos -->
-  <div id="modalFoto" class="modal-foto">
-    <span class="fechar-foto">&times;</span>
-    <img id="imgAmpliada" src="" alt="Foto ampliada">
+  <!-- MODAL DE IMAGEM -->
+  <div id="modalImagem" class="modal-imagem">
+    <span class="fechar-imagem">&times;</span>
+    <img class="modal-imagem-conteudo" id="imagemAmpliada">
   </div>
 
   <script src="script.js"></script>
 
   <script>
-    // === Modal de foto ===
-    const modalFoto = document.getElementById("modalFoto");
-    const imgAmpliada = document.getElementById("imgAmpliada");
-    const fecharFoto = document.querySelector(".fechar-foto");
+    // === BOTÃO DE AJUDA (abre mesmo modal de informações) ===
+    document.getElementById("botaoAjuda").addEventListener("click", () => {
+      document.getElementById("modalInfo").style.display = "block";
+    });
 
-    document.querySelectorAll(".fotos img").forEach(img => {
+    // === ABRIR IMAGENS EM TELA CHEIA ===
+    const modalImg = document.getElementById("modalImagem");
+    const imgAmpliada = document.getElementById("imagemAmpliada");
+    const fecharImg = document.querySelector(".fechar-imagem");
+
+    document.querySelectorAll(".galeria img").forEach(img => {
+      img.style.cursor = "pointer";
       img.addEventListener("click", () => {
-        modalFoto.style.display = "block";
+        modalImg.style.display = "block";
         imgAmpliada.src = img.src;
       });
     });
 
-    fecharFoto.onclick = () => modalFoto.style.display = "none";
-    modalFoto.onclick = e => { if (e.target === modalFoto) modalFoto.style.display = "none"; };
+    fecharImg.onclick = () => {
+      modalImg.style.display = "none";
+    };
 
-    // === Botão flutuante abre o mesmo modal existente ===
-    document.getElementById("btnInfoFlutuante").addEventListener("click", () => {
-      document.getElementById("modalInfo").style.display = "block";
-    });
+    window.onclick = (event) => {
+      if (event.target === modalImg) {
+        modalImg.style.display = "none";
+      }
+    };
   </script>
 </body>
 </html>
