@@ -260,7 +260,7 @@ function gerarCalendario(ano) {
     const primeiroDiaSemana = new Date(ano, mes, 1).getDay();
     const diasNoMes = new Date(ano, mes + 1, 0).getDate();
 
-    for (let i = 0; i < (primeiroDiaSemana === 0 ? 6 : primeiroDiaSemana - 1); i++) {
+    for (let i = 0; i < primeiroDiaSemana; i++)  {
       const vazio = document.createElement("div");
       vazio.className = "dia vazio";
       diasEl.appendChild(vazio);
