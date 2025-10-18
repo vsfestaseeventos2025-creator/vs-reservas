@@ -31,36 +31,85 @@
       color: white;
       text-align: center;
       box-shadow: 0 0 8px rgba(255, 215, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .mes h3 {
       color: var(--dourado);
-      margin-bottom: 10px;
+      margin:0;
       font-size: 16px;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
-    .dias {
+    .dias-header {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 4px;
       font-size: 11px;
+      color: #cfcfcf;
+      font-weight: 700;
+    }
+    .dia-header {
+      background: transparent;
+      color: #cfcfcf;
+      padding: 6px 4px;
+      font-size: 11px;
+    }
+
+    .dias {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      font-size: 11px;
+      align-items: center;
     }
 
     .dia {
-      padding: 6px;
-      border-radius: 6px;
+      padding: 8px 6px;
+      border-radius: 8px;
       background: #222;
       color: #ddd;
       transition: 0.12s;
       user-select:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:30px;
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2);
+    }
+
+    .dia.empty {
+      background: transparent;
+      box-shadow: none;
+      cursor: default;
+      color: transparent;
+    }
+
+    .dia.reservado-confirmado {
+      background: #c23;
+      color: white;
+      font-weight: bold;
+    }
+
+    .dia.reservado-prereserva {
+      background: var(--dourado);
+      color: black;
+      font-weight: bold;
+    }
+
+    .dia.reservado-cancelado {
+      background: #444;
+      color: #999;
+      font-weight: 600;
     }
 
     .dia:hover {
-      background: #333;
+      filter: brightness(1.05);
       cursor: pointer;
-      transform: translateY(-3px);
+      transform: translateY(-2px);
     }
 
     /* === POPUP === */
@@ -106,6 +155,15 @@
     .note-empty { text-align:center; color:#999; font-size:13px; padding:8px 0; }
     .year-select { text-align:center; margin-top:8px; }
     .year-select select { background:#111; border:1px solid var(--dourado); color:var(--dourado); padding:6px 8px; border-radius:6px; }
+
+    /* smaller screens */
+    @media (max-width:1000px) {
+      .calendario-admin { grid-template-columns: repeat(2, 1fr); }
+      .mes { min-height: 220px; }
+    }
+    @media (max-width:640px) {
+      .calendario-admin { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 
@@ -155,8 +213,7 @@
     <p>© <span id="ano"></span> VS Festas e Eventos</p>
   </footer>
 
-  <!-- SCRIPT -->
-  <script>
+<script>
 document.getElementById("ano").textContent = new Date().getFullYear();
 
 const calendarioEl = document.getElementById("calendario");
@@ -169,20 +226,20 @@ const mesesNomes = [
 
 let reservasGlobais = [];
 
-// === Padroniza datas (usa dd/mm/yyyy em tudo)
-function normalizarData(dataStr) {
-  if (dataStr.includes("-")) {
-    const [ano, mes, dia] = dataStr.split("-");
-    return `${dia}/${mes}/${ano}`;
-  }
-  return dataStr;
+function dataParaISO(str) {
+  if(!str) return "";
+  const parts = str.split("/");
+  if(parts.length !== 3) return str;
+  return `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`;
 }
-function padronizarDataParaSalvar(dataStr) {
-  if (dataStr.includes("-")) {
-    const [ano, mes, dia] = dataStr.split("-");
-    return `${dia}/${mes}/${ano}`;
-  }
-  return dataStr;
+
+function escapeHtml(text) {
+  return String(text || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 // === POPUP ADMIN ===
@@ -191,18 +248,18 @@ function mostrarPopup(dataSelecionada) {
   const overlay = document.createElement("div");
   overlay.className = "popup-overlay";
   overlay.innerHTML = `
-    <div class="popup">
+    <div class="popup" role="dialog" aria-modal="true">
       <h3>Gerenciar Reserva (${dataSelecionada})</h3>
       <label>Cliente:</label>
-      <input id="popupCliente" type="text" value="${reservaExistente ? (reservaExistente.cliente || "") : ""}">
+      <input id="popupCliente" type="text" value="${reservaExistente ? escapeHtml(reservaExistente.cliente) : ""}">
       <label>Status:</label>
       <select id="popupStatus">
-        <option value="confirmado">Confirmado</option>
-        <option value="pre-reserva">Pré-reserva</option>
-        <option value="cancelado">Cancelado</option>
+        <option value="Confirmado">Confirmado</option>
+        <option value="Pré-reserva">Pré-reserva</option>
+        <option value="Cancelado">Cancelado</option>
       </select>
       <label>Notas:</label>
-      <textarea id="popupNotas">${reservaExistente ? (reservaExistente.notas || "") : ""}</textarea>
+      <textarea id="popupNotas">${reservaExistente ? escapeHtml(reservaExistente.notas) : ""}</textarea>
       <div class="actions">
         <button class="btn btn-muted" id="btnCancelar">Cancelar</button>
         ${reservaExistente ? `<button class="btn btn-danger" id="btnExcluir">Excluir</button>` : ""}
@@ -220,13 +277,15 @@ function mostrarPopup(dataSelecionada) {
     const cliente = overlay.querySelector("#popupCliente").value.trim();
     const status = overlay.querySelector("#popupStatus").value;
     const notas = overlay.querySelector("#popupNotas").value.trim();
+
     if (!cliente) return alert("Informe o nome do cliente.");
 
-    const payload = { data: padronizarDataParaSalvar(dataSelecionada), cliente, status, notas };
+    const payload = { data: dataSelecionada, cliente, status, notas };
     try {
       const existe = reservasGlobais.find(r => r.data === dataSelecionada);
       let res;
       if (existe) {
+        // update by data
         res = await fetch(`/api/reservas/${encodeURIComponent(dataSelecionada)}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -240,7 +299,14 @@ function mostrarPopup(dataSelecionada) {
         });
       }
 
-      if (!res.ok) throw new Error("Erro ao salvar reserva.");
+      if (!res.ok) {
+        // read possible error message
+        let text;
+        try { text = await res.json(); } catch(e){ text = null; }
+        console.error("Resposta inválida:", res.status, text);
+        throw new Error("Erro ao salvar reserva.");
+      }
+
       overlay.remove();
       await carregarReservas();
     } catch (err) {
@@ -259,21 +325,52 @@ function mostrarPopup(dataSelecionada) {
         overlay.remove();
         await carregarReservas();
       } catch (err) {
+        console.error(err);
         alert("Erro ao excluir reserva.");
       }
     };
   }
+
+  // fecha clicando fora
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
 }
 
 // === CALENDÁRIO ===
 function gerarCalendario(ano) {
   calendarioEl.innerHTML = "";
+  const weekLabels = ["D","S","T","Q","Q","S","S"];
+
   for (let mes = 0; mes < 12; mes++) {
     const mesEl = document.createElement("div");
     mesEl.className = "mes";
-    mesEl.innerHTML = `<h3>${mesesNomes[mes]} ${ano}</h3>`;
+
+    // título
+    const title = document.createElement("h3");
+    title.textContent = `${mesesNomes[mes]} ${ano}`;
+    mesEl.appendChild(title);
+
+    // cabeçalho dos dias
+    const header = document.createElement("div");
+    header.className = "dias-header";
+    weekLabels.forEach(l => {
+      const h = document.createElement("div");
+      h.className = "dia-header";
+      h.textContent = l;
+      header.appendChild(h);
+    });
+    mesEl.appendChild(header);
+
     const diasEl = document.createElement("div");
     diasEl.className = "dias";
+
+    // offset: quantos "blanks" antes do dia 1
+    const primeiroDia = new Date(ano, mes, 1).getDay(); // 0 = dom ... 6 = sab
+    for (let i = 0; i < primeiroDia; i++) {
+      const blank = document.createElement("div");
+      blank.className = "dia empty";
+      blank.textContent = ""; // visual vazio
+      diasEl.appendChild(blank);
+    }
 
     const diasNoMes = new Date(ano, mes + 1, 0).getDate();
     for (let dia = 1; dia <= diasNoMes; dia++) {
@@ -284,46 +381,49 @@ function gerarCalendario(ano) {
 
       const reserva = reservasGlobais.find(r => r.data === dataFormatada);
       if (reserva) {
-        const status = (reserva.status || "").toLowerCase();
+        const status = String(reserva.status || "").toLowerCase();
         if (status.includes("confirm")) {
-          diaEl.style.background = "#c23";
-          diaEl.style.color = "white";
-        } else if (status.includes("pre")) {
-          diaEl.style.background = "var(--dourado)";
-          diaEl.style.color = "black";
+          diaEl.classList.add("reservado-confirmado");
+        } else if (status.includes("pré") || status.includes("pre")) {
+          diaEl.classList.add("reservado-prereserva");
+        } else if (status.includes("cancel")) {
+          diaEl.classList.add("reservado-cancelado");
         } else {
-          diaEl.style.background = "#333";
-          diaEl.style.color = "#999";
+          // fallback: marca como pré-reserva se não reconhecido
+          diaEl.classList.add("reservado-prereserva");
         }
+        // tooltip com detalhes
+        diaEl.title = `${reserva.cliente || ""}${reserva.notas ? " — " + reserva.notas : ""}`.trim();
       }
 
-      diaEl.onclick = () => mostrarPopup(dataFormatada);
+      diaEl.addEventListener("click", () => mostrarPopup(dataFormatada));
       diasEl.appendChild(diaEl);
     }
 
+    // append dos elementos do mês
     mesEl.appendChild(diasEl);
     calendarioEl.appendChild(mesEl);
   }
+
+  // atualiza tabela também
   renderTabelaReservas();
 }
 
-// === TABELA ===
 function renderTabelaReservas() {
   tabelaBody.innerHTML = "";
-  const ordenadas = reservasGlobais.sort((a,b) => {
-    const [diaA, mesA, anoA] = a.data.split("/").map(Number);
-    const [diaB, mesB, anoB] = b.data.split("/").map(Number);
-    return new Date(anoA, mesA-1, diaA) - new Date(anoB, mesB-1, diaB);
+  const ordenadas = reservasGlobais.slice().sort((a,b) => {
+    const A = dataParaISO(a.data || "");
+    const B = dataParaISO(b.data || "");
+    return A.localeCompare(B);
   });
-
   for (const r of ordenadas) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${r.data}</td>
-      <td>${r.cliente}</td>
-      <td>${r.status}</td>
-      <td>${r.notas || ""}</td>
-      <td><button class="btn btn-muted ver" data-data="${r.data}">Abrir</button></td>
+      <td>${escapeHtml(r.data || "")}</td>
+      <td>${escapeHtml(r.cliente || "")}</td>
+      <td>${escapeHtml(r.status || "")}</td>
+      <td>${escapeHtml(r.notas || "")}</td>
+      <td><button class="btn btn-muted ver" data-data="${escapeHtml(r.data || "")}">Abrir</button></td>
     `;
     tabelaBody.appendChild(tr);
   }
@@ -336,18 +436,26 @@ function renderTabelaReservas() {
 async function carregarReservas() {
   try {
     const res = await fetch("/api/reservas");
-    let dados = await res.json();
+    if (!res.ok) throw new Error("Resposta não OK");
+    const dados = await res.json();
+    if (!Array.isArray(dados)) throw new Error("Formato inesperado");
+    // normaliza o objeto (garante campos)
     reservasGlobais = dados.map(r => ({
-      ...r,
-      data: normalizarData(r.data)
+      _id: r._id || r.id || null,
+      data: r.data || r.date || "",
+      cliente: r.cliente || r.nome || "",
+      status: r.status || r.estado || "",
+      notas: r.notas || r.note || ""
     }));
-  } catch (e) {
+  } catch (err) {
+    console.warn("Erro ao carregar /api/reservas:", err);
     reservasGlobais = [];
   }
-  gerarCalendario(parseInt(seletorAno.value, 10));
+  gerarCalendario(parseInt(seletorAno.value,10) || new Date().getFullYear());
 }
 
-seletorAno.onchange = () => gerarCalendario(parseInt(seletorAno.value, 10));
+// eventos
+seletorAno.addEventListener("change", () => gerarCalendario(parseInt(seletorAno.value,10)));
 carregarReservas();
 </script>
 </body>
