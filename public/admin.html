@@ -38,6 +38,15 @@
       letter-spacing: 1px;
     }
 
+    .dias-semana {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      font-size: 11px;
+      color: var(--dourado);
+      margin-bottom: 4px;
+    }
+
     .dias {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -231,20 +240,26 @@ function mostrarPopup(dataSelecionada) {
   }
 }
 
-// === CALENDÁRIO CORRIGIDO ===
+// === CALENDÁRIO COM CABEÇALHO DE DIAS ===
 function gerarCalendario(ano) {
   calendarioEl.innerHTML = "";
   for (let mes = 0; mes < 12; mes++) {
     const mesEl = document.createElement("div");
     mesEl.className = "mes";
     mesEl.innerHTML = `<h3>${mesesNomes[mes]} ${ano}</h3>`;
+
+    // Cabeçalho dos dias da semana
+    const cabecalho = document.createElement("div");
+    cabecalho.className = "dias-semana";
+    cabecalho.innerHTML = "<div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>";
+    mesEl.appendChild(cabecalho);
+
     const diasEl = document.createElement("div");
     diasEl.className = "dias";
 
-    const primeiroDiaSemana = new Date(ano, mes, 1).getDay(); // 0=Dom, 1=Seg...
+    const primeiroDiaSemana = new Date(ano, mes, 1).getDay();
     const diasNoMes = new Date(ano, mes + 1, 0).getDate();
 
-    // Adiciona espaços antes do primeiro dia
     for (let i = 0; i < (primeiroDiaSemana === 0 ? 6 : primeiroDiaSemana - 1); i++) {
       const vazio = document.createElement("div");
       vazio.className = "dia vazio";
