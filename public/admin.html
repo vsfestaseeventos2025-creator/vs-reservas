@@ -57,12 +57,6 @@
       user-select:none;
     }
 
-    .dia.reservado {
-      background: var(--dourado);
-      color: black;
-      font-weight: bold;
-    }
-
     .dia:hover {
       background: #333;
       cursor: pointer;
@@ -161,7 +155,8 @@
     <p>© <span id="ano"></span> VS Festas e Eventos</p>
   </footer>
 
- <script>
+  <!-- SCRIPT -->
+  <script>
 document.getElementById("ano").textContent = new Date().getFullYear();
 
 const calendarioEl = document.getElementById("calendario");
@@ -174,18 +169,20 @@ const mesesNomes = [
 
 let reservasGlobais = [];
 
-function dataParaISO(str) {
-  const parts = str.split("/");
-  return `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`;
+// === Padroniza datas (usa dd/mm/yyyy em tudo)
+function normalizarData(dataStr) {
+  if (dataStr.includes("-")) {
+    const [ano, mes, dia] = dataStr.split("-");
+    return `${dia}/${mes}/${ano}`;
+  }
+  return dataStr;
 }
-
-function escapeHtml(text) {
-  return String(text || "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'", "&#039;");
+function padronizarDataParaSalvar(dataStr) {
+  if (dataStr.includes("-")) {
+    const [ano, mes, dia] = dataStr.split("-");
+    return `${dia}/${mes}/${ano}`;
+  }
+  return dataStr;
 }
 
 // === POPUP ADMIN ===
@@ -197,15 +194,15 @@ function mostrarPopup(dataSelecionada) {
     <div class="popup">
       <h3>Gerenciar Reserva (${dataSelecionada})</h3>
       <label>Cliente:</label>
-      <input id="popupCliente" type="text" value="${reservaExistente ? escapeHtml(reservaExistente.cliente) : ""}">
+      <input id="popupCliente" type="text" value="${reservaExistente ? (reservaExistente.cliente || "") : ""}">
       <label>Status:</label>
       <select id="popupStatus">
-        <option value="Confirmado">Confirmado</option>
-        <option value="Pré-reserva">Pré-reserva</option>
-        <option value="Cancelado">Cancelado</option>
+        <option value="confirmado">Confirmado</option>
+        <option value="pre-reserva">Pré-reserva</option>
+        <option value="cancelado">Cancelado</option>
       </select>
       <label>Notas:</label>
-      <textarea id="popupNotas">${reservaExistente ? escapeHtml(reservaExistente.notas) : ""}</textarea>
+      <textarea id="popupNotas">${reservaExistente ? (reservaExistente.notas || "") : ""}</textarea>
       <div class="actions">
         <button class="btn btn-muted" id="btnCancelar">Cancelar</button>
         ${reservaExistente ? `<button class="btn btn-danger" id="btnExcluir">Excluir</button>` : ""}
@@ -223,10 +220,9 @@ function mostrarPopup(dataSelecionada) {
     const cliente = overlay.querySelector("#popupCliente").value.trim();
     const status = overlay.querySelector("#popupStatus").value;
     const notas = overlay.querySelector("#popupNotas").value.trim();
-
     if (!cliente) return alert("Informe o nome do cliente.");
 
-    const payload = { data: dataSelecionada, cliente, status, notas };
+    const payload = { data: padronizarDataParaSalvar(dataSelecionada), cliente, status, notas };
     try {
       const existe = reservasGlobais.find(r => r.data === dataSelecionada);
       let res;
@@ -288,12 +284,12 @@ function gerarCalendario(ano) {
 
       const reserva = reservasGlobais.find(r => r.data === dataFormatada);
       if (reserva) {
-        const status = reserva.status.toLowerCase();
+        const status = (reserva.status || "").toLowerCase();
         if (status.includes("confirm")) {
-          diaEl.style.background = "#c23"; // vermelho
+          diaEl.style.background = "#c23";
           diaEl.style.color = "white";
-        } else if (status.includes("pré") || status.includes("pre")) {
-          diaEl.style.background = "var(--dourado)"; // amarelo
+        } else if (status.includes("pre")) {
+          diaEl.style.background = "var(--dourado)";
           diaEl.style.color = "black";
         } else {
           diaEl.style.background = "#333";
@@ -308,14 +304,18 @@ function gerarCalendario(ano) {
     mesEl.appendChild(diasEl);
     calendarioEl.appendChild(mesEl);
   }
-
   renderTabelaReservas();
 }
 
 // === TABELA ===
 function renderTabelaReservas() {
   tabelaBody.innerHTML = "";
-  const ordenadas = reservasGlobais.sort((a,b) => dataParaISO(a.data).localeCompare(dataParaISO(b.data)));
+  const ordenadas = reservasGlobais.sort((a,b) => {
+    const [diaA, mesA, anoA] = a.data.split("/").map(Number);
+    const [diaB, mesB, anoB] = b.data.split("/").map(Number);
+    return new Date(anoA, mesA-1, diaA) - new Date(anoB, mesB-1, diaB);
+  });
+
   for (const r of ordenadas) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -336,14 +336,19 @@ function renderTabelaReservas() {
 async function carregarReservas() {
   try {
     const res = await fetch("/api/reservas");
-    reservasGlobais = await res.json();
-  } catch {
+    let dados = await res.json();
+    reservasGlobais = dados.map(r => ({
+      ...r,
+      data: normalizarData(r.data)
+    }));
+  } catch (e) {
     reservasGlobais = [];
   }
-  gerarCalendario(parseInt(seletorAno.value,10));
+  gerarCalendario(parseInt(seletorAno.value, 10));
 }
 
-seletorAno.onchange = () => gerarCalendario(parseInt(seletorAno.value,10));
+seletorAno.onchange = () => gerarCalendario(parseInt(seletorAno.value, 10));
 carregarReservas();
 </script>
-
+</body>
+</html>
